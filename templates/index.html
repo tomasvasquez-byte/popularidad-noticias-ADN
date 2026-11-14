@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<h1 class="titulo">Ingrese las características de la noticia</h1>
+<p class="intro">Los valores iniciales son los típicos del dataset, así que puede calcular de inmediato y luego ir cambiando lo que corresponda a su artículo.</p>
+
+{% if errores %}
+<div class="aviso-error" role="alert" id="resumen-errores">
+  <strong>Hay {{ errores|length }} campo{{ 's' if errores|length > 1 }} por corregir.</strong>
+  Los mensajes aparecen junto a cada campo.
+</div>
+{% endif %}
+
+<form method="post" action="{{ url_for('predecir_noticia') }}" id="formulario" novalidate>
+
+  {% for grupo in grupos %}
+  <fieldset class="grupo">
+    <legend>{{ grupo.titulo }}</legend>
+    <div class="rejilla">
+      {% for c in grupo.campos %}
+      <div class="campo {{ 'con-error' if errores.get(c.nombre) }}">
+        <label for="{{ c.nombre }}">{{ c.etiqueta }}</label>
+        <input type="text" inputmode="decimal" id="{{ c.nombre }}" name="{{ c.nombre }}"
+               value="{{ datos.get(c.nombre, '') }}" autocomplete="off"
+               aria-describedby="ayuda-{{ c.nombre }}"
+               {% if errores.get(c.nombre) %}aria-invalid="true"{% endif %}>
+        <small id="ayuda-{{ c.nombre }}">
+          {% if errores.get(c.nombre) %}{{ errores[c.nombre] }}{% else %}{{ c.ayuda }}{% endif %}
+        </small>
+      </div>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% endfor %}
+
+  <fieldset class="grupo">
+    <legend>Publicación</legend>
+    <div class="rejilla">
+      <div class="campo {{ 'con-error' if errores.get('canal') }}">
+        <label for="canal">Canal temático</label>
+        <select id="canal" name="canal">
+          {% for clave, nombre, _ in canales %}
+          <option value="{{ clave }}" {{ 'selected' if datos.get('canal') == clave }}>{{ nombre }}</option>
+          {% endfor %}
+        </select>
+        <small>{{ errores.get('canal', 'Si no calza con ninguno, elija «Otro canal».') }}</small>
+      </div>
+      <div class="campo {{ 'con-error' if errores.get('dia') }}">
+        <label for="dia">Día de publicación</label>
+        <select id="dia" name="dia">
+          {% for clave, nombre, _ in dias %}
+          <option value="{{ clave }}" {{ 'selected' if datos.get('dia') == clave }}>{{ nombre }}</option>
+          {% endfor %}
+        </select>
+        <small>{{ errores.get('dia', 'Día de la semana en que saldrá la noticia.') }}</small>
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="acciones">
+    <button type="submit" class="boton" id="boton-enviar">Calcular compartidos esperados</button>
+    <a class="enlace" href="{{ url_for('index') }}">Restablecer valores</a>
+  </div>
+</form>
+{% endblock %}
